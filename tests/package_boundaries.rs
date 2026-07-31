@@ -247,6 +247,91 @@ fn release_inventory_surface_is_rust_only_untrusted_data_without_runtime_or_poli
 }
 
 #[test]
+fn transparency_checkpoint_surface_is_rust_only_untrusted_data_without_proof_or_state_wiring() {
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    assert!(!manifest.contains("[dependencies]"));
+    assert!(!manifest.contains("[build-dependencies]"));
+
+    let source =
+        fs::read_to_string(root().join("src/untrusted_transparency_checkpoint.rs")).unwrap();
+    for required in [
+        "pub struct UntrustedTransparencyCheckpointV1",
+        "MAX_UNTRUSTED_TRANSPARENCY_CHECKPOINT_BYTES: usize = 4_096",
+        "canonicalize_untrusted_transparency_checkpoint",
+        "tree_size must be a canonical unsigned JSON u64",
+    ] {
+        assert!(source.contains(required), "checkpoint omitted {required}");
+    }
+    for forbidden in [
+        "use crate::dsse",
+        "use crate::base64",
+        "std::fs",
+        "std::io",
+        "std::net",
+        "std::os",
+        "std::path",
+        "std::process",
+        "std::time",
+        "Command::",
+        "TcpStream",
+        "File::",
+        "SystemTime",
+        "InclusionProof",
+        "ConsistencyProof",
+        "Witness",
+        "Quorum",
+        "TrustedCheckpoint",
+        "VerifiedCheckpoint",
+        "AcceptedCheckpoint",
+        "ActiveLog",
+        "ReleasePolicy",
+        "verify",
+        "persist",
+    ] {
+        assert!(
+            !source.contains(forbidden),
+            "checkpoint crossed its inert untrusted boundary: {forbidden}"
+        );
+    }
+
+    for forbidden_path in [
+        "schemas/untrusted-transparency-checkpoint.v1.schema.json",
+        "schemas/transparency-checkpoint.v1.schema.json",
+        "data/untrusted-transparency-checkpoint.v1.json",
+        "data/transparency-checkpoint.v1.json",
+        "tests/fixtures/untrusted-transparency-checkpoint",
+        "tests/fixtures/transparency-checkpoint",
+        "src/transparency_verifier.rs",
+        "src/transparency_state.rs",
+        "src/witness.rs",
+        "src/inclusion_proof.rs",
+        "src/consistency_proof.rs",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden checkpoint trust/proof/runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    for forbidden in [
+        "transparency-checkpoint",
+        "UntrustedTransparencyCheckpoint",
+        "canonicalize_untrusted_transparency_checkpoint",
+    ] {
+        assert!(
+            !package.contains(forbidden),
+            "checkpoint entered npm metadata: {forbidden}"
+        );
+        assert!(
+            !declarations.contains(forbidden),
+            "checkpoint entered declarations: {forbidden}"
+        );
+    }
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [

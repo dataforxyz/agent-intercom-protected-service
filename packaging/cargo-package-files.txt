@@ -22,9 +22,11 @@ agent-intercom-protected-service-0.1.0/src/provisioning_request.rs
 agent-intercom-protected-service-0.1.0/src/strict_json.rs
 agent-intercom-protected-service-0.1.0/src/systemd_hardening.rs
 agent-intercom-protected-service-0.1.0/src/untrusted_release_inventory.rs
+agent-intercom-protected-service-0.1.0/src/untrusted_transparency_checkpoint.rs
 agent-intercom-protected-service-0.1.0/tests/contracts_sync.rs
 agent-intercom-protected-service-0.1.0/tests/dsse.rs
 agent-intercom-protected-service-0.1.0/tests/package_boundaries.rs
 agent-intercom-protected-service-0.1.0/tests/provisioning_request.rs
 agent-intercom-protected-service-0.1.0/tests/systemd_hardening.rs
 agent-intercom-protected-service-0.1.0/tests/untrusted_release_inventory.rs
+agent-intercom-protected-service-0.1.0/tests/untrusted_transparency_checkpoint.rs
