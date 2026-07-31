@@ -1,6 +1,6 @@
 # Architecture
 
-The foundation has two independent, inert flows:
+The foundation has three independent, inert flows:
 
 ```text
 untrusted request bytes (<=4096)
@@ -13,6 +13,12 @@ untrusted hardening bytes (<=4096)
   -> the same strict JSON boundary
   -> exact systemd-hardening.v1 comparison
   -> inert validation marker
+
+untrusted DSSE envelope bytes (<=65536)
+  -> the same strict JSON boundary
+  -> exact payload,payloadType,signatures / keyid,sig projection
+  -> canonical padded standard base64 decoding with bounded output
+  -> untrusted decoded values + fixed-order JSON + exact DSSE v1 PAE
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -36,6 +42,25 @@ mandatory for every trusted validation decision.
 
 `src/systemd_hardening.rs` compares the closed hardening object. It cannot
 render, install, or apply systemd configuration.
+
+`src/base64.rs` implements canonical padded RFC 4648 standard base64 without a
+dependency. It rejects whitespace, the URL-safe alphabet, misplaced or extra
+padding, nonzero pad bits, and every spelling that does not round-trip to the
+canonical encoder.
+
+`src/dsse.rs` implements only the DSSE v1 envelope format. Canonical JSON uses
+the fixed lexicographic field order `payload,payloadType,signatures` and
+`keyid,sig`, minimally escapes printable-ASCII quote and backslash bytes, and
+preserves signature order. Its PAE is exactly `DSSEv1 ` followed by the
+decimal payload-type byte length, payload type, decimal decoded-payload byte
+length, and decoded payload, with one ASCII space between components. Empty
+payloads are representable. The required `keyid` may be empty because DSSE
+permits an unspecified key identifier; it remains attacker-chosen routing
+metadata and is never a trust decision.
+
+There is no algorithm inference, cryptographic signature-length assumption,
+semantic payload parsing, verification, trust argument or result, release
+policy, install authorization, or runtime consumer in this flow.
 
 The private npm package is an alternate static distribution of the schemas,
 types, and fixed hardening data. It has no runtime surface. Rust tests pin the

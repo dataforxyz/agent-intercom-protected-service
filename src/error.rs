@@ -16,6 +16,8 @@ pub enum ContractErrorKind {
     NonAscii,
     /// JSON syntax or a JSON value shape was invalid.
     InvalidJson,
+    /// A field was not canonical padded RFC 4648 standard base64.
+    InvalidBase64,
     /// A decoded JSON object contained the same key more than once.
     DuplicateKey,
     /// A required field was absent.

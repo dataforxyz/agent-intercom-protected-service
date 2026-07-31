@@ -14,12 +14,15 @@ agent-intercom-protected-service-0.1.0/package.json
 agent-intercom-protected-service-0.1.0/rust-toolchain.toml
 agent-intercom-protected-service-0.1.0/schemas/provisioning-request.v1.schema.json
 agent-intercom-protected-service-0.1.0/schemas/systemd-hardening.v1.schema.json
+agent-intercom-protected-service-0.1.0/src/base64.rs
+agent-intercom-protected-service-0.1.0/src/dsse.rs
 agent-intercom-protected-service-0.1.0/src/error.rs
 agent-intercom-protected-service-0.1.0/src/lib.rs
 agent-intercom-protected-service-0.1.0/src/provisioning_request.rs
 agent-intercom-protected-service-0.1.0/src/strict_json.rs
 agent-intercom-protected-service-0.1.0/src/systemd_hardening.rs
 agent-intercom-protected-service-0.1.0/tests/contracts_sync.rs
+agent-intercom-protected-service-0.1.0/tests/dsse.rs
 agent-intercom-protected-service-0.1.0/tests/package_boundaries.rs
 agent-intercom-protected-service-0.1.0/tests/provisioning_request.rs
 agent-intercom-protected-service-0.1.0/tests/systemd_hardening.rs
