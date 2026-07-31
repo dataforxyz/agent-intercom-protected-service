@@ -16,6 +16,7 @@ mod systemd_hardening;
 mod untrusted_release_inventory;
 mod untrusted_transparency_checkpoint;
 mod untrusted_transparency_consistency_proof;
+mod untrusted_transparency_inclusion_proof;
 
 pub use dsse::{
     canonicalize_untrusted_dsse_envelope, UntrustedDsseEnvelopeV1, UntrustedDsseSignature,
@@ -44,4 +45,9 @@ pub use untrusted_transparency_consistency_proof::{
     canonicalize_untrusted_transparency_consistency_proof, UntrustedTransparencyConsistencyProofV1,
     MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_BYTES,
     MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_NODES,
+};
+pub use untrusted_transparency_inclusion_proof::{
+    canonicalize_untrusted_transparency_inclusion_proof, UntrustedTransparencyInclusionProofV1,
+    MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_BYTES,
+    MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_NODES,
 };

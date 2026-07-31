@@ -418,6 +418,95 @@ fn transparency_consistency_surface_is_rust_only_untrusted_data_without_verifier
 }
 
 #[test]
+fn transparency_inclusion_surface_is_rust_only_untrusted_data_without_verifier_or_state_wiring() {
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    assert!(!manifest.contains("[dependencies]"));
+    assert!(!manifest.contains("[build-dependencies]"));
+
+    let source =
+        fs::read_to_string(root().join("src/untrusted_transparency_inclusion_proof.rs")).unwrap();
+    for required in [
+        "pub struct UntrustedTransparencyInclusionProofV1",
+        "MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_BYTES: usize = 65_536",
+        "MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_NODES: usize = 64",
+        "canonicalize_untrusted_transparency_inclusion_proof",
+        "leaf_index must be a canonical unsigned JSON u64",
+        "proof must contain 0..=64 opaque node claims",
+    ] {
+        assert!(
+            source.contains(required),
+            "inclusion claim omitted {required}"
+        );
+    }
+    for forbidden in [
+        "use crate::dsse",
+        "use crate::base64",
+        "std::fs",
+        "std::io",
+        "std::net",
+        "std::os",
+        "std::path",
+        "std::process",
+        "std::time",
+        "Command::",
+        "TcpStream",
+        "File::",
+        "SystemTime",
+        "TrustedInclusion",
+        "VerifiedInclusion",
+        "AcceptedInclusion",
+        "ActiveLog",
+        "Witness",
+        "Quorum",
+        "Merkle",
+        "verify_inclusion",
+        "manifest_digest",
+        "release_tuple",
+        "persist",
+    ] {
+        assert!(
+            !source.contains(forbidden),
+            "inclusion claim crossed its inert boundary: {forbidden}"
+        );
+    }
+
+    for forbidden_path in [
+        "schemas/untrusted-transparency-inclusion-proof.v1.schema.json",
+        "schemas/transparency-inclusion-proof.v1.schema.json",
+        "data/untrusted-transparency-inclusion-proof.v1.json",
+        "data/transparency-inclusion-proof.v1.json",
+        "tests/fixtures/untrusted-transparency-inclusion-proof",
+        "tests/fixtures/transparency-inclusion-proof",
+        "src/transparency_verifier.rs",
+        "src/transparency_state.rs",
+        "src/witness.rs",
+        "src/merkle.rs",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden inclusion trust/runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    for forbidden in [
+        "transparency-inclusion-proof",
+        "UntrustedTransparencyInclusionProof",
+        "canonicalize_untrusted_transparency_inclusion_proof",
+    ] {
+        assert!(
+            !package.contains(forbidden),
+            "inclusion claim entered npm metadata: {forbidden}"
+        );
+        assert!(
+            !declarations.contains(forbidden),
+            "inclusion claim entered declarations: {forbidden}"
+        );
+    }
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [
