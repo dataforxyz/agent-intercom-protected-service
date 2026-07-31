@@ -16,6 +16,27 @@ const ROOT_DIGEST_FIELDS: &[(&str, &str)] = &[
     ("algorithm", "$.root_digest.algorithm"),
     ("value", "$.root_digest.value"),
 ];
+const ROOT_PATHS: CheckpointClaimPaths = CheckpointClaimPaths {
+    fields: ROOT_FIELDS,
+    digest_fields: ROOT_DIGEST_FIELDS,
+    path: "$",
+    digest_path: "$.root_digest",
+    algorithm_path: "$.root_digest.algorithm",
+    value_path: "$.root_digest.value",
+    schema_path: "$.schema_version",
+    tree_size_path: "$.tree_size",
+};
+
+pub(crate) struct CheckpointClaimPaths {
+    pub(crate) fields: &'static [(&'static str, &'static str)],
+    pub(crate) digest_fields: &'static [(&'static str, &'static str)],
+    pub(crate) path: &'static str,
+    pub(crate) digest_path: &'static str,
+    pub(crate) algorithm_path: &'static str,
+    pub(crate) value_path: &'static str,
+    pub(crate) schema_path: &'static str,
+    pub(crate) tree_size_path: &'static str,
+}
 
 /// A closed, bounded, entirely attacker-chosen transparency-checkpoint claim.
 ///
@@ -34,21 +55,7 @@ impl UntrustedTransparencyCheckpointV1 {
     /// Parses the closed checkpoint shape and its bounded attacker claims.
     pub fn parse(input: &[u8]) -> Result<Self, ContractError> {
         let root = parse_strict_json(input, MAX_UNTRUSTED_TRANSPARENCY_CHECKPOINT_BYTES, "$")?;
-        let mut root = exact_object(root, ROOT_FIELDS, "$")?;
-        let root_digest = parse_digest_claim(
-            take(&mut root, "root_digest"),
-            ROOT_DIGEST_FIELDS,
-            "$.root_digest",
-            "$.root_digest.algorithm",
-            "$.root_digest.value",
-        )?;
-        exact_one(take(&mut root, "schema_version"), "$.schema_version")?;
-        let tree_size = canonical_tree_size(take(&mut root, "tree_size"))?;
-        Ok(Self {
-            root_digest,
-            schema_version: 1,
-            tree_size,
-        })
+        parse_checkpoint_claim(root, &ROOT_PATHS)
     }
 
     /// Returns the opaque attacker-chosen root-digest claim.
@@ -73,11 +80,7 @@ impl UntrustedTransparencyCheckpointV1 {
     #[must_use]
     pub fn canonical_bytes(&self) -> Vec<u8> {
         let mut output = Vec::new();
-        output.extend_from_slice(b"{\"root_digest\":");
-        push_digest_claim(&mut output, &self.root_digest);
-        output.extend_from_slice(b",\"schema_version\":1,\"tree_size\":");
-        output.extend_from_slice(self.tree_size.to_string().as_bytes());
-        output.push(b'}');
+        push_checkpoint_claim(&mut output, self);
         output
     }
 }
@@ -92,29 +95,61 @@ pub fn canonicalize_untrusted_transparency_checkpoint(
     UntrustedTransparencyCheckpointV1::parse(input).map(|checkpoint| checkpoint.canonical_bytes())
 }
 
-fn canonical_tree_size(value: StrictJsonValue) -> Result<u64, ContractError> {
+pub(crate) fn parse_checkpoint_claim(
+    value: StrictJsonValue,
+    paths: &CheckpointClaimPaths,
+) -> Result<UntrustedTransparencyCheckpointV1, ContractError> {
+    let mut checkpoint = exact_object(value, paths.fields, paths.path)?;
+    let root_digest = parse_digest_claim(
+        take(&mut checkpoint, "root_digest"),
+        paths.digest_fields,
+        paths.digest_path,
+        paths.algorithm_path,
+        paths.value_path,
+    )?;
+    exact_one(take(&mut checkpoint, "schema_version"), paths.schema_path)?;
+    let tree_size = canonical_tree_size(take(&mut checkpoint, "tree_size"), paths.tree_size_path)?;
+    Ok(UntrustedTransparencyCheckpointV1 {
+        root_digest,
+        schema_version: 1,
+        tree_size,
+    })
+}
+
+pub(crate) fn push_checkpoint_claim(
+    output: &mut Vec<u8>,
+    checkpoint: &UntrustedTransparencyCheckpointV1,
+) {
+    output.extend_from_slice(b"{\"root_digest\":");
+    push_digest_claim(output, checkpoint.root_digest());
+    output.extend_from_slice(b",\"schema_version\":1,\"tree_size\":");
+    output.extend_from_slice(checkpoint.tree_size().to_string().as_bytes());
+    output.push(b'}');
+}
+
+fn canonical_tree_size(value: StrictJsonValue, path: &'static str) -> Result<u64, ContractError> {
     let StrictJsonValue::Number(number) = value else {
-        return invalid_tree_size();
+        return invalid_tree_size(path);
     };
     if number.is_empty()
         || (number.len() > 1 && number.starts_with('0'))
         || !number.bytes().all(|byte| byte.is_ascii_digit())
     {
-        return invalid_tree_size();
+        return invalid_tree_size(path);
     }
     number.parse::<u64>().map_err(|_| {
         ContractError::new(
             ContractErrorKind::InvalidField,
-            "$.tree_size",
+            path,
             "tree_size must be a canonical unsigned JSON u64",
         )
     })
 }
 
-fn invalid_tree_size<T>() -> Result<T, ContractError> {
+fn invalid_tree_size<T>(path: &'static str) -> Result<T, ContractError> {
     Err(ContractError::new(
         ContractErrorKind::InvalidField,
-        "$.tree_size",
+        path,
         "tree_size must be a canonical unsigned JSON u64",
     ))
 }

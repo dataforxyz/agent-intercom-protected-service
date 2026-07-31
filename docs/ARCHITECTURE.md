@@ -30,6 +30,11 @@ untrusted transparency-checkpoint bytes (<=4096)
   -> the same bounded strict JSON boundary
   -> one opaque root-digest claim + one canonical-u64 tree-size claim
   -> fixed-order root_digest,schema_version,tree_size JSON
+
+untrusted transparency-consistency-proof bytes (<=65536)
+  -> the same bounded strict JSON boundary
+  -> exact from/to checkpoint claims + 0..=64 ordered opaque node claims
+  -> fixed-order from_checkpoint,proof,schema_version,to_checkpoint JSON
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -96,10 +101,22 @@ fields as `root_digest,schema_version,tree_size` and nested digest fields as
 operation, inclusion or consistency proof, signature, witness, threshold,
 identity, freshness, monotonicity, append-only check, or durable state.
 
-Untrusted inventory/evidence/checkpoint data is a separate layer from any
-future trusted metadata. This repository has no trusted metadata, durable
-release state, state transition, transparency-log proof checking, witness
-checking, or consumer that could turn a candidate into authority.
+`src/untrusted_transparency_consistency_proof.rs` implements only an explicitly
+untrusted, self-contained consistency-proof claim. It reuses the exact
+checkpoint grammar for both endpoints and preserves an ordered 0..=64 array of
+opaque digest claims, including duplicates. Canonicalization orders root fields
+as `from_checkpoint,proof,schema_version,to_checkpoint`. It intentionally
+accepts regressing endpoint sizes, equal sizes with unequal roots, empty proofs,
+duplicate nodes, mixed algorithms, and arbitrary printable digest values. It
+performs no Merkle operation, proof-length inference, endpoint ordering or root
+relation, algorithm/log selection, consistency verification, append-only check,
+monotonicity/freshness decision, witness/quorum check, or durable-state update.
+
+Untrusted inventory/evidence/checkpoint/consistency-proof data is a separate
+layer from any future trusted metadata. This repository has no trusted
+metadata, durable release state, state transition, transparency-log proof
+checking, witness checking, or consumer that could turn a candidate into
+authority.
 
 The private npm package is an alternate static distribution of the two
 schemas, their types, and fixed hardening data. It has no inventory exposure or

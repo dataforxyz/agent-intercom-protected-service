@@ -10,7 +10,9 @@ Intercom protected-service boundary. Today it provides only:
 - a bounded Rust-only parser and canonicalizer for one explicitly untrusted
   single-tuple release-inventory candidate;
 - a bounded Rust-only parser and canonicalizer for one explicitly untrusted
-  transparency-checkpoint claim; and
+  transparency-checkpoint claim;
+- a bounded Rust-only parser and canonicalizer for one explicitly untrusted,
+  self-contained transparency-consistency-proof claim; and
 - a private, data-only npm contract pack containing the two closed JSON
   schemas, type declarations, and hardening data.
 
@@ -85,6 +87,22 @@ The parser selects no log or digest algorithm, checks no proof or witness,
 performs no hashing, and establishes no freshness, monotonicity, append-only
 property, quorum, identity, or release acceptance. This Rust-only surface is
 also absent from JSON Schemas, TypeScript declarations, and npm metadata.
+
+`UntrustedTransparencyConsistencyProofV1::parse(&[u8])` accepts at most 65536
+bytes. Its closed root contains exactly
+`from_checkpoint,proof,schema_version,to_checkpoint`. Both endpoints reuse the
+exact checkpoint grammar. `proof` is an ordered array of 0..=64 opaque digest
+claims; order and duplicates are preserved. Compact canonical JSON uses that
+fixed root order, checkpoint order `root_digest,schema_version,tree_size`, and
+digest order `algorithm,value`.
+
+The parser does not compare endpoint sizes or roots, infer a proof length,
+select an algorithm or log, perform Merkle operations, verify consistency, or
+establish append-only behavior, monotonicity, freshness, witness authority,
+quorum, durable high-water state, or release acceptance. Regressing sizes,
+equal sizes with unequal roots, empty proofs, duplicate nodes, and mixed opaque
+algorithms remain representable attacker claims. This Rust-only surface is
+absent from JSON Schemas, TypeScript declarations, and npm metadata.
 
 ## Contract pack
 

@@ -15,6 +15,7 @@ mod strict_json;
 mod systemd_hardening;
 mod untrusted_release_inventory;
 mod untrusted_transparency_checkpoint;
+mod untrusted_transparency_consistency_proof;
 
 pub use dsse::{
     canonicalize_untrusted_dsse_envelope, UntrustedDsseEnvelopeV1, UntrustedDsseSignature,
@@ -38,4 +39,9 @@ pub use untrusted_release_inventory::{
 pub use untrusted_transparency_checkpoint::{
     canonicalize_untrusted_transparency_checkpoint, UntrustedTransparencyCheckpointV1,
     MAX_UNTRUSTED_TRANSPARENCY_CHECKPOINT_BYTES,
+};
+pub use untrusted_transparency_consistency_proof::{
+    canonicalize_untrusted_transparency_consistency_proof, UntrustedTransparencyConsistencyProofV1,
+    MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_BYTES,
+    MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_NODES,
 };
