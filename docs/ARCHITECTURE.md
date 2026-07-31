@@ -1,6 +1,6 @@
 # Architecture
 
-The foundation has three independent, inert flows:
+The foundation has four independent, inert flows:
 
 ```text
 untrusted request bytes (<=4096)
@@ -19,6 +19,12 @@ untrusted DSSE envelope bytes (<=65536)
   -> exact payload,payloadType,signatures / keyid,sig projection
   -> canonical padded standard base64 decoding with bounded output
   -> untrusted decoded values + fixed-order JSON + exact DSSE v1 PAE
+
+untrusted release-inventory bytes (<=32768)
+  -> the same bounded strict JSON boundary
+  -> one exact channel,target,version tuple + one installable descriptor
+  -> 0..=32 closed evidence descriptors with opaque digest/length claims
+  -> subject/installable digest-claim string equality only + fixed-order JSON
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -62,9 +68,30 @@ There is no algorithm inference, cryptographic signature-length assumption,
 semantic payload parsing, verification, trust argument or result, release
 policy, install authorization, or runtime consumer in this flow.
 
-The private npm package is an alternate static distribution of the schemas,
-types, and fixed hardening data. It has no runtime surface. Rust tests pin the
-schema literals and data to the library contract.
+`src/untrusted_release_inventory.rs` implements only an explicitly untrusted
+inventory-candidate shape. The closed root requires one singular `installable`
+object, so multiple installable descriptors are not representable. Evidence is
+ordered, may be empty, is capped at 32 entries, and uses six closed tags. Each
+evidence subject algorithm/value pair must equal the installable
+algorithm/value pair after JSON decoding. That comparison is ordinary string
+equality, not a digest operation or statement about external bytes. Digest
+algorithms and values are attacker claims; the module performs no algorithm
+dispatch, digest-format inference, hashing, evidence sufficiency decision, or
+install selection. Canonical JSON orders root fields as
+`channel,evidence,installable,schema_version,target,version`, descriptors as
+`digest,length` or `digest,length,subject_digest,tag`, and digest fields as
+`algorithm,value`. Claimed lengths are emitted as canonical decimal `u64`
+integers.
+
+Untrusted inventory/evidence data is a separate layer from any future trusted
+metadata. This repository has no trusted metadata, durable release state,
+state transition, transparency-log proof checking, witness checking, or
+consumer that could turn the candidate into authority.
+
+The private npm package is an alternate static distribution of the two
+schemas, their types, and fixed hardening data. It has no inventory exposure or
+runtime surface. Rust tests pin the schema literals and data to the library
+contract.
 
 There is deliberately no product binary, main function, build script, native
 code, JavaScript, service unit, provider, installer, IPC, network access,

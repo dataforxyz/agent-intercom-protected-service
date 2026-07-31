@@ -7,6 +7,8 @@ parses JSON with duplicate-key rejection, projects only closed fields, and
 either returns fixed-order request bytes or confirms that hardening data equals
 the sole accepted object. The DSSE parser additionally returns bounded decoded
 payload and signature bytes, fixed-order envelope JSON, or exact DSSE v1 PAE.
+The release-inventory parser returns one bounded tuple, one singular
+installable descriptor, and bounded evidence descriptors as fixed-order JSON.
 Every returned value remains untrusted with respect to any future privileged
 action.
 
@@ -16,13 +18,22 @@ DSSE format validity is not signature verification. Both an empty `keyid`
 length input; the parser selects no algorithm and makes no signature-length
 inference. Payload bytes receive no semantic interpretation.
 
-This foundation contains no trust roots, trusted keys, cryptographic
-verification, digest validation, policy engine, release manifest, release
-catalog, identity mapping, installer, service unit, provider selection,
-broker/Controller connection, trust argument or result, or privileged API. It
-does not implement `VerifiedReleasePolicy` or `verify_install_input`. Those are
-separate future slices requiring independent security review before any
-integration.
+Inventory digest algorithms, digest values, and lengths are attacker claims.
+An evidence subject digest is required to have algorithm and value strings
+equal to the singular installable digest strings, but that is only decoded-byte
+string equality. It neither computes nor validates a digest, identifies bytes,
+assesses evidence, nor selects an installable. The evidence array may be empty.
+No transparency inclusion, consistency, or witness claim is checked.
+
+The current inventory and evidence are solely untrusted input. Future trusted
+metadata, durable rollback or enrollment state, and authorization/state
+transitions are separate layers and are all absent. This foundation contains
+no trust roots, trusted keys, cryptographic verification, digest validation,
+policy engine, authoritative release manifest or catalog, identity mapping,
+installer, service unit, provider selection, broker/Controller connection,
+trust argument or result, or privileged API. It does not implement
+`VerifiedReleasePolicy` or `verify_install_input`. Those are separate future
+slices requiring independent security review before any integration.
 
 The merged adapters and Orchestrator intentionally report that the protected
 provisioner/authority is unavailable. This repository does not alter or bypass

@@ -6,14 +6,17 @@ Intercom protected-service boundary. Today it provides only:
 - a Rust library that validates and canonicalizes `provisioning-request.v1`;
 - an inert validator for the exact `systemd-hardening.v1` data contract;
 - a bounded, format-only parser and canonicalizer for untrusted DSSE v1
-  envelopes, including exact pre-authentication encoding; and
+  envelopes, including exact pre-authentication encoding;
+- a bounded Rust-only parser and canonicalizer for one explicitly untrusted
+  single-tuple release-inventory candidate; and
 - a private, data-only npm contract pack containing the two closed JSON
   schemas, type declarations, and hardening data.
 
 Nothing here installs, provisions, authenticates, authorizes, starts, stops,
 signals, or mutates a service, account, key, socket, provider, or host. There
 is no binary, `main`, build script, service unit, JavaScript runtime, trust
-root, release manifest, signature policy, installer, or integration wiring.
+root, authoritative release manifest, signature policy, installer, or
+integration wiring.
 The DSSE surface adds no trust root, signature verification, cryptographic
 algorithm, semantic payload policy, installer, or integration wiring.
 
@@ -49,6 +52,26 @@ array order. `pre_authentication_encoding()` returns exactly
 `DSSEv1 <payloadType-byte-length> <payloadType> <payload-byte-length> <payload>`.
 The parser does not interpret payload semantics, infer an algorithm, verify a
 signature, or authorize any action.
+
+`UntrustedReleaseInventoryV1::parse(&[u8])` accepts at most 32768 bytes. Its
+closed root contains exactly
+`channel,evidence,installable,schema_version,target,version`, where
+`schema_version` is the JSON integer `1` and
+`installable` is one required descriptor with exactly `digest,length`.
+Channel, target, version, and digest-algorithm claims use short bounded ASCII
+identifier grammars. Claimed lengths are canonical JSON `u64` values.
+
+The required evidence array contains 0..=32 ordered descriptors tagged only
+`sbom`, `provenance`, `attestation`, `build_recipe`, `toolchain`, or
+`builder_record`. Each evidence descriptor contains exactly
+`digest,length,subject_digest,tag`. A subject digest's algorithm and value
+strings must equal the singular installable digest's strings after JSON
+decoding. This is opaque string equality only: no algorithm is selected, no
+digest is decoded or computed, no bytes are compared, and no evidence is made
+sufficient. Digest values are attacker-chosen printable ASCII claims. Compact
+canonical JSON uses the fixed field order stated above, with `algorithm,value`
+inside each digest claim. This Rust-only surface is absent from the JSON
+Schemas, TypeScript declarations, and npm package metadata.
 
 ## Contract pack
 

@@ -13,6 +13,7 @@ mod error;
 mod provisioning_request;
 mod strict_json;
 mod systemd_hardening;
+mod untrusted_release_inventory;
 
 pub use dsse::{
     canonicalize_untrusted_dsse_envelope, UntrustedDsseEnvelopeV1, UntrustedDsseSignature,
@@ -27,4 +28,9 @@ pub use provisioning_request::{
 pub use systemd_hardening::{
     validate_systemd_hardening, SystemdHardeningV1, MAX_SYSTEMD_HARDENING_BYTES,
     SYSTEMD_HARDENING_V1_JSON,
+};
+pub use untrusted_release_inventory::{
+    canonicalize_untrusted_release_inventory, UntrustedArtifactClaim, UntrustedDigestClaim,
+    UntrustedEvidenceClaim, UntrustedEvidenceTag, UntrustedReleaseInventoryV1,
+    MAX_UNTRUSTED_EVIDENCE_CLAIMS, MAX_UNTRUSTED_RELEASE_INVENTORY_BYTES,
 };

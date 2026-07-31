@@ -13,10 +13,11 @@ identity, release authority, or operating-system root privilege. It performs no
 ceremony and enables no code path. It only lays out questions and an
 **UNAPPROVED** recommendation for humans to review later.
 
-The current repository remains a format-only, non-privileged foundation. It
-does not verify releases or authorize installation. Production verification and
-Boss remain unavailable. This draft does not establish or claim Revision-17 or
-Fable compliance.
+The current repository remains a format-only, non-privileged foundation. Its
+single-tuple release inventory is explicitly untrusted input, not trusted
+metadata or a release decision. It does not verify releases or authorize
+installation. Production verification and Boss remain unavailable. This draft
+does not establish or claim Revision-17 or Fable compliance.
 
 ## Status and interpretation
 
@@ -232,6 +233,17 @@ product is selected here.
 This section proposes the exact logical field set to be signed. It does not
 choose the byte encoding or provide a manifest instance. Every field and rule
 is **DRAFT AND UNAPPROVED**.
+
+This proposed future manifest is distinct from the current
+`UntrustedReleaseInventoryV1` input contract and makes no compatibility claim
+with it. The current contract carries one untrusted tuple, one singular
+installable descriptor, and 0..=32 untrusted evidence descriptors. Its digest
+algorithm/value pairs and lengths are opaque attacker claims. Matching an
+evidence subject digest to the installable digest is decoded-string equality
+only; it performs no hashing, artifact comparison, evidence assessment,
+transparency or witness check, or authorization. It is neither the trusted
+metadata proposed below, durable rollback state, nor a delegation, revocation,
+or root transition.
 
 The release payload would be a closed object containing exactly these required
 fields:
@@ -459,7 +471,8 @@ test cadence remain **TBD**.
 ## CI exclusion
 
 **UNAPPROVED policy direction:** CI may build unsigned candidates, run tests,
-compare reproducible outputs, and emit non-authoritative evidence. CI would not:
+compare reproducible outputs, and emit non-authoritative evidence or untrusted
+inventory candidates. CI would not:
 
 - possess, reconstruct, recover, request unattended use of, or proxy root or
   release signing authority;
