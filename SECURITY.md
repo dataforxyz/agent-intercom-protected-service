@@ -11,7 +11,9 @@ validation marker. Its DSSE support only validates a closed envelope shape,
 canonical base64, bounds, canonical JSON, and pre-authentication encoding. It
 also parses one closed, bounded release-inventory candidate whose tuple,
 singular installable descriptor, evidence descriptors, lengths, and digest
-strings all remain attacker claims. It has no authority to provision, install,
+strings all remain attacker claims. It also parses one closed, bounded
+transparency-checkpoint claim whose tree size and opaque root digest remain
+attacker claims. It has no authority to provision, install,
 authenticate, authorize, create accounts, manage keys, render service units,
 contact systemd, start processes, open sockets, or mutate a host.
 
@@ -28,8 +30,13 @@ evidence may be empty. Equality between an evidence `subject_digest` and the
 singular installable `digest` compares only the two decoded algorithm strings
 and two decoded value strings. It performs no digest decoding, computation,
 algorithm selection, artifact-byte comparison, evidence assessment, or install
-selection. Claimed lengths are not measurements. No transparency-log proof or
-witness statement is checked.
+selection. Claimed lengths are not measurements. An
+`UntrustedTransparencyCheckpointV1` similarly performs only closed structural
+parsing and fixed-order canonicalization. Its tree size is not an observed
+high-water mark, its root digest is not computed or decoded, and input cannot
+name an active log. No inclusion proof, consistency proof, signature, witness
+statement, identity, threshold, append-only property, freshness, monotonicity,
+or release acceptance is checked.
 
 ## Parser defenses
 
@@ -48,7 +55,11 @@ entries; requires exactly one `installable` object; restricts tuple and
 algorithm labels to bounded non-path ASCII identifiers; accepts only canonical
 unsigned JSON `u64` length claims; and bounds digest value claims to printable
 ASCII. Its digest labels and values remain opaque and receive no
-algorithm-specific allowlist, decoding, or length inference.
+algorithm-specific allowlist, decoding, or length inference. The checkpoint
+parser caps total input at 4096 bytes, requires the exact three-field root and
+exact two-field digest, accepts only canonical unsigned JSON `u64` tree-size
+claims, and applies the same opaque bounded digest grammar without algorithm
+dispatch or digest-length inference.
 JSON Schema is only a structural, non-authoritative consumer aid; it cannot
 enforce raw lexical duplicate/numeric rules or Rust `u64` conversion. The Rust
 byte parser is mandatory for contract validation.

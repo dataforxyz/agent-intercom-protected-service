@@ -1,6 +1,6 @@
 # Architecture
 
-The foundation has four independent, inert flows:
+The foundation has five independent, inert flows:
 
 ```text
 untrusted request bytes (<=4096)
@@ -25,6 +25,11 @@ untrusted release-inventory bytes (<=32768)
   -> one exact channel,target,version tuple + one installable descriptor
   -> 0..=32 closed evidence descriptors with opaque digest/length claims
   -> subject/installable digest-claim string equality only + fixed-order JSON
+
+untrusted transparency-checkpoint bytes (<=4096)
+  -> the same bounded strict JSON boundary
+  -> one opaque root-digest claim + one canonical-u64 tree-size claim
+  -> fixed-order root_digest,schema_version,tree_size JSON
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -83,10 +88,18 @@ install selection. Canonical JSON orders root fields as
 `algorithm,value`. Claimed lengths are emitted as canonical decimal `u64`
 integers.
 
-Untrusted inventory/evidence data is a separate layer from any future trusted
-metadata. This repository has no trusted metadata, durable release state,
-state transition, transparency-log proof checking, witness checking, or
-consumer that could turn the candidate into authority.
+`src/untrusted_transparency_checkpoint.rs` implements only an explicitly
+untrusted checkpoint-claim shape. It reuses the opaque digest-claim grammar and
+adds a canonical unsigned JSON `u64` tree size. Canonical JSON orders root
+fields as `root_digest,schema_version,tree_size` and nested digest fields as
+`algorithm,value`. There is no log selector, algorithm dispatch, digest
+operation, inclusion or consistency proof, signature, witness, threshold,
+identity, freshness, monotonicity, append-only check, or durable state.
+
+Untrusted inventory/evidence/checkpoint data is a separate layer from any
+future trusted metadata. This repository has no trusted metadata, durable
+release state, state transition, transparency-log proof checking, witness
+checking, or consumer that could turn a candidate into authority.
 
 The private npm package is an alternate static distribution of the two
 schemas, their types, and fixed hardening data. It has no inventory exposure or

@@ -8,7 +8,9 @@ Intercom protected-service boundary. Today it provides only:
 - a bounded, format-only parser and canonicalizer for untrusted DSSE v1
   envelopes, including exact pre-authentication encoding;
 - a bounded Rust-only parser and canonicalizer for one explicitly untrusted
-  single-tuple release-inventory candidate; and
+  single-tuple release-inventory candidate;
+- a bounded Rust-only parser and canonicalizer for one explicitly untrusted
+  transparency-checkpoint claim; and
 - a private, data-only npm contract pack containing the two closed JSON
   schemas, type declarations, and hardening data.
 
@@ -72,6 +74,17 @@ sufficient. Digest values are attacker-chosen printable ASCII claims. Compact
 canonical JSON uses the fixed field order stated above, with `algorithm,value`
 inside each digest claim. This Rust-only surface is absent from the JSON
 Schemas, TypeScript declarations, and npm package metadata.
+
+`UntrustedTransparencyCheckpointV1::parse(&[u8])` accepts at most 4096 bytes.
+Its closed root contains exactly `root_digest,schema_version,tree_size`, where
+`schema_version` is the JSON integer `1`, `tree_size` is a canonical unsigned
+JSON `u64`, and `root_digest` reuses the bounded opaque digest-claim grammar.
+Compact canonical JSON fixes root order as
+`root_digest,schema_version,tree_size` and digest order as `algorithm,value`.
+The parser selects no log or digest algorithm, checks no proof or witness,
+performs no hashing, and establishes no freshness, monotonicity, append-only
+property, quorum, identity, or release acceptance. This Rust-only surface is
+also absent from JSON Schemas, TypeScript declarations, and npm metadata.
 
 ## Contract pack
 

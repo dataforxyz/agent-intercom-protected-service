@@ -359,7 +359,7 @@ fn parse_evidence_claims(
     Ok(evidence_claims)
 }
 
-fn parse_digest_claim(
+pub(crate) fn parse_digest_claim(
     value: StrictJsonValue,
     fields: &[(&'static str, &'static str)],
     path: &'static str,
@@ -452,7 +452,7 @@ fn is_printable_ascii(value: &str) -> bool {
     value.bytes().all(|byte| (0x20..=0x7e).contains(&byte))
 }
 
-fn push_digest_claim(output: &mut Vec<u8>, digest: &UntrustedDigestClaim) {
+pub(crate) fn push_digest_claim(output: &mut Vec<u8>, digest: &UntrustedDigestClaim) {
     output.extend_from_slice(b"{\"algorithm\":");
     push_json_string(output, digest.algorithm());
     output.extend_from_slice(b",\"value\":");

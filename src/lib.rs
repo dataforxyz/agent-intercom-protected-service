@@ -14,6 +14,7 @@ mod provisioning_request;
 mod strict_json;
 mod systemd_hardening;
 mod untrusted_release_inventory;
+mod untrusted_transparency_checkpoint;
 
 pub use dsse::{
     canonicalize_untrusted_dsse_envelope, UntrustedDsseEnvelopeV1, UntrustedDsseSignature,
@@ -33,4 +34,8 @@ pub use untrusted_release_inventory::{
     canonicalize_untrusted_release_inventory, UntrustedArtifactClaim, UntrustedDigestClaim,
     UntrustedEvidenceClaim, UntrustedEvidenceTag, UntrustedReleaseInventoryV1,
     MAX_UNTRUSTED_EVIDENCE_CLAIMS, MAX_UNTRUSTED_RELEASE_INVENTORY_BYTES,
+};
+pub use untrusted_transparency_checkpoint::{
+    canonicalize_untrusted_transparency_checkpoint, UntrustedTransparencyCheckpointV1,
+    MAX_UNTRUSTED_TRANSPARENCY_CHECKPOINT_BYTES,
 };
