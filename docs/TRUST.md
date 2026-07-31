@@ -10,8 +10,10 @@ payload and signature bytes, fixed-order envelope JSON, or exact DSSE v1 PAE.
 The release-inventory parser returns one bounded tuple, one singular
 installable descriptor, and bounded evidence descriptors as fixed-order JSON.
 The transparency-checkpoint parser returns one opaque root-digest claim and one
-canonical-u64 tree-size claim as fixed-order JSON. Every returned value remains
-untrusted with respect to any future privileged action.
+canonical-u64 tree-size claim as fixed-order JSON. The consistency-proof parser
+returns exact untrusted from/to checkpoint claims plus 0..=64 ordered opaque
+node claims as fixed-order JSON. Every returned value remains untrusted with
+respect to any future privileged action.
 
 DSSE format validity is not signature verification. Both an empty `keyid`
 (permitted as an unspecified key under DSSE conventions) and a nonempty
@@ -32,7 +34,14 @@ freshness or monotonicity, bind a release tuple, validate a proof or signature,
 or satisfy any witness threshold. It exists only as a canonical attacker claim
 for a later independently reviewed layer to bind.
 
-The current inventory, evidence, and checkpoint are solely untrusted input. Future trusted
+A format-valid consistency-proof claim also establishes no relation between its
+endpoints or nodes. Regressing sizes, unequal roots at equal sizes, an empty
+proof, duplicate nodes, and mixed opaque algorithms are intentionally accepted.
+No Merkle operation, proof sufficiency, consistency, append-only property,
+monotonicity, freshness, active-log identity, witness authority, quorum, or
+state transition follows from parse success.
+
+The current inventory, evidence, checkpoint, and consistency proof are solely untrusted input. Future trusted
 metadata, durable rollback or enrollment state, and authorization/state
 transitions are separate layers and are all absent. This foundation contains
 no trust roots, trusted keys, cryptographic verification, digest validation,

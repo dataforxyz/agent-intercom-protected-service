@@ -13,7 +13,9 @@ also parses one closed, bounded release-inventory candidate whose tuple,
 singular installable descriptor, evidence descriptors, lengths, and digest
 strings all remain attacker claims. It also parses one closed, bounded
 transparency-checkpoint claim whose tree size and opaque root digest remain
-attacker claims. It has no authority to provision, install,
+attacker claims. It also parses one bounded self-contained consistency-proof
+claim whose endpoint checkpoints and ordered opaque nodes remain attacker
+claims. It has no authority to provision, install,
 authenticate, authorize, create accounts, manage keys, render service units,
 contact systemd, start processes, open sockets, or mutate a host.
 
@@ -36,7 +38,13 @@ parsing and fixed-order canonicalization. Its tree size is not an observed
 high-water mark, its root digest is not computed or decoded, and input cannot
 name an active log. No inclusion proof, consistency proof, signature, witness
 statement, identity, threshold, append-only property, freshness, monotonicity,
-or release acceptance is checked.
+or release acceptance is checked. An
+`UntrustedTransparencyConsistencyProofV1` likewise only preserves two exact
+checkpoint claims and 0..=64 ordered opaque digest claims. It intentionally
+does not reject regressing sizes, unequal equal-size roots, empty or duplicate
+nodes, or mixed algorithms because it performs no ordering, Merkle, proof,
+append-only, monotonicity, witness, quorum, active-log, or durable-state
+semantics.
 
 ## Parser defenses
 
@@ -59,7 +67,11 @@ algorithm-specific allowlist, decoding, or length inference. The checkpoint
 parser caps total input at 4096 bytes, requires the exact three-field root and
 exact two-field digest, accepts only canonical unsigned JSON `u64` tree-size
 claims, and applies the same opaque bounded digest grammar without algorithm
-dispatch or digest-length inference.
+dispatch or digest-length inference. The consistency-proof parser caps total
+input at 65536 bytes and opaque proof nodes at 64, reuses the exact checkpoint
+and digest grammars, preserves array order and duplicates, and adds no
+algorithm, proof-length, endpoint-ordering, root-relation, or verification
+logic.
 JSON Schema is only a structural, non-authoritative consumer aid; it cannot
 enforce raw lexical duplicate/numeric rules or Rust `u64` conversion. The Rust
 byte parser is mandatory for contract validation.

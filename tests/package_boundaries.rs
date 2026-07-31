@@ -332,6 +332,92 @@ fn transparency_checkpoint_surface_is_rust_only_untrusted_data_without_proof_or_
 }
 
 #[test]
+fn transparency_consistency_surface_is_rust_only_untrusted_data_without_verifier_or_state_wiring() {
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    assert!(!manifest.contains("[dependencies]"));
+    assert!(!manifest.contains("[build-dependencies]"));
+
+    let source =
+        fs::read_to_string(root().join("src/untrusted_transparency_consistency_proof.rs")).unwrap();
+    for required in [
+        "pub struct UntrustedTransparencyConsistencyProofV1",
+        "MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_BYTES: usize = 65_536",
+        "MAX_UNTRUSTED_TRANSPARENCY_CONSISTENCY_PROOF_NODES: usize = 64",
+        "canonicalize_untrusted_transparency_consistency_proof",
+        "proof must contain 0..=64 opaque node claims",
+    ] {
+        assert!(
+            source.contains(required),
+            "consistency claim omitted {required}"
+        );
+    }
+    for forbidden in [
+        "use crate::dsse",
+        "use crate::base64",
+        "std::fs",
+        "std::io",
+        "std::net",
+        "std::os",
+        "std::path",
+        "std::process",
+        "std::time",
+        "Command::",
+        "TcpStream",
+        "File::",
+        "SystemTime",
+        "TrustedConsistency",
+        "VerifiedConsistency",
+        "AcceptedConsistency",
+        "ActiveLog",
+        "Witness",
+        "Quorum",
+        "Merkle",
+        "verify_consistency",
+        "persist",
+    ] {
+        assert!(
+            !source.contains(forbidden),
+            "consistency claim crossed its inert boundary: {forbidden}"
+        );
+    }
+
+    for forbidden_path in [
+        "schemas/untrusted-transparency-consistency-proof.v1.schema.json",
+        "schemas/transparency-consistency-proof.v1.schema.json",
+        "data/untrusted-transparency-consistency-proof.v1.json",
+        "data/transparency-consistency-proof.v1.json",
+        "tests/fixtures/untrusted-transparency-consistency-proof",
+        "tests/fixtures/transparency-consistency-proof",
+        "src/transparency_verifier.rs",
+        "src/transparency_state.rs",
+        "src/witness.rs",
+        "src/merkle.rs",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden consistency trust/runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    for forbidden in [
+        "transparency-consistency-proof",
+        "UntrustedTransparencyConsistencyProof",
+        "canonicalize_untrusted_transparency_consistency_proof",
+    ] {
+        assert!(
+            !package.contains(forbidden),
+            "consistency claim entered npm metadata: {forbidden}"
+        );
+        assert!(
+            !declarations.contains(forbidden),
+            "consistency claim entered declarations: {forbidden}"
+        );
+    }
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [
