@@ -507,6 +507,96 @@ fn transparency_inclusion_surface_is_rust_only_untrusted_data_without_verifier_o
 }
 
 #[test]
+fn transparency_witness_claim_surface_is_rust_only_untrusted_data_without_quorum_or_runtime_wiring()
+{
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    assert!(!manifest.contains("[dependencies]"));
+    assert!(!manifest.contains("[build-dependencies]"));
+
+    let source =
+        fs::read_to_string(root().join("src/untrusted_transparency_witness_claim.rs")).unwrap();
+    for required in [
+        "pub struct UntrustedTransparencyWitnessClaimV1",
+        "MAX_UNTRUSTED_TRANSPARENCY_WITNESS_CLAIM_BYTES: usize = 8_192",
+        "MAX_UNTRUSTED_TRANSPARENCY_WITNESS_SIGNATURE_BYTES: usize = 4_096",
+        "canonicalize_untrusted_transparency_witness_claim",
+        "log_id must be 1..=128 bytes in [A-Za-z0-9._-]",
+        "canonical padded RFC 4648 standard base64",
+    ] {
+        assert!(
+            source.contains(required),
+            "witness claim omitted {required}"
+        );
+    }
+    for forbidden in [
+        "use crate::dsse",
+        "pre_authentication_encoding",
+        "std::fs",
+        "std::io",
+        "std::net",
+        "std::os",
+        "std::path",
+        "std::process",
+        "std::time",
+        "Command::",
+        "TcpStream",
+        "File::",
+        "SystemTime",
+        "TrustedWitness",
+        "VerifiedWitness",
+        "AcceptedWitness",
+        "EligibleWitness",
+        "WitnessSet",
+        "verify_signature",
+        "verify_checkpoint",
+        "release_tuple",
+        "manifest_digest",
+        "persist",
+    ] {
+        assert!(
+            !source.contains(forbidden),
+            "witness claim crossed its inert boundary: {forbidden}"
+        );
+    }
+
+    for forbidden_path in [
+        "schemas/untrusted-transparency-witness-claim.v1.schema.json",
+        "schemas/transparency-witness-claim.v1.schema.json",
+        "data/untrusted-transparency-witness-claim.v1.json",
+        "data/transparency-witness-claim.v1.json",
+        "tests/fixtures/untrusted-transparency-witness-claim",
+        "tests/fixtures/transparency-witness-claim",
+        "src/transparency_verifier.rs",
+        "src/transparency_state.rs",
+        "src/witness_set.rs",
+        "src/witness_quorum.rs",
+        "src/release_policy.rs",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden witness trust/runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    for forbidden in [
+        "transparency-witness-claim",
+        "UntrustedTransparencyWitnessClaim",
+        "canonicalize_untrusted_transparency_witness_claim",
+    ] {
+        assert!(
+            !package.contains(forbidden),
+            "witness claim entered npm metadata: {forbidden}"
+        );
+        assert!(
+            !declarations.contains(forbidden),
+            "witness claim entered declarations: {forbidden}"
+        );
+    }
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [

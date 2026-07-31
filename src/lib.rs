@@ -17,6 +17,7 @@ mod untrusted_release_inventory;
 mod untrusted_transparency_checkpoint;
 mod untrusted_transparency_consistency_proof;
 mod untrusted_transparency_inclusion_proof;
+mod untrusted_transparency_witness_claim;
 
 pub use dsse::{
     canonicalize_untrusted_dsse_envelope, UntrustedDsseEnvelopeV1, UntrustedDsseSignature,
@@ -50,4 +51,11 @@ pub use untrusted_transparency_inclusion_proof::{
     canonicalize_untrusted_transparency_inclusion_proof, UntrustedTransparencyInclusionProofV1,
     MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_BYTES,
     MAX_UNTRUSTED_TRANSPARENCY_INCLUSION_PROOF_NODES,
+};
+pub use untrusted_transparency_witness_claim::{
+    canonicalize_untrusted_transparency_witness_claim, UntrustedTransparencyWitnessClaimV1,
+    MAX_UNTRUSTED_TRANSPARENCY_WITNESS_CLAIM_BYTES,
+    MAX_UNTRUSTED_TRANSPARENCY_WITNESS_KEY_ID_BYTES,
+    MAX_UNTRUSTED_TRANSPARENCY_WITNESS_LOG_ID_BYTES,
+    MAX_UNTRUSTED_TRANSPARENCY_WITNESS_SIGNATURE_BYTES,
 };

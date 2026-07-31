@@ -14,7 +14,9 @@ canonical-u64 tree-size claim as fixed-order JSON. The consistency-proof parser
 returns exact untrusted from/to checkpoint claims plus 0..=64 ordered opaque
 node claims as fixed-order JSON. The inclusion-proof parser returns one
 untrusted checkpoint, opaque leaf digest, canonical-u64 leaf index, and 0..=64
-ordered opaque nodes as fixed-order JSON. Every returned value remains
+ordered opaque nodes as fixed-order JSON. The witness-claim parser returns one
+alleged checkpoint, log ID, key ID, and opaque signature byte string as
+fixed-order JSON. Every returned value remains
 untrusted with respect to any future privileged action.
 
 DSSE format validity is not signature verification. Both an empty `keyid`
@@ -51,8 +53,14 @@ release tuple, no digest or Merkle algorithm/log is selected, and no index
 range, orientation, proof length, root relation, witness evidence, high-water
 state, release acceptance, or installation authorization is checked.
 
-The current inventory, evidence, checkpoint, consistency proof, and inclusion
-proof are solely untrusted input. Future trusted metadata, durable rollback or
+A format-valid witness claim establishes no witness statement or signature
+validity. It defines no signed bytes, selects no algorithm, maps no key/log ID
+to a trusted identity, checks no eligible set, independence, uniqueness,
+threshold, quorum, or intersection, validates no checkpoint or release tuple,
+and updates no state. A singular alleged signature cannot satisfy Revision 19.
+
+The current inventory, evidence, checkpoint, consistency proof, inclusion
+proof, and witness claim are solely untrusted input. Future trusted metadata, durable rollback or
 enrollment state, and authorization/state
 transitions are separate layers and are all absent. This foundation contains
 no trust roots, trusted keys, cryptographic verification, digest validation,

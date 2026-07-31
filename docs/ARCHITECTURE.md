@@ -40,6 +40,11 @@ untrusted transparency-inclusion-proof bytes (<=65536)
   -> the same bounded strict JSON boundary
   -> exact checkpoint + opaque leaf digest + canonical-u64 index + 0..=64 nodes
   -> fixed-order checkpoint,leaf_digest,leaf_index,proof,schema_version JSON
+
+untrusted transparency-witness-claim bytes (<=8192)
+  -> the same bounded strict JSON boundary + exact checkpoint grammar
+  -> one alleged log ID, key ID, and canonical-base64 opaque signature
+  -> fixed-order checkpoint,keyid,log_id,schema_version,sig JSON
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -130,7 +135,19 @@ index/orientation/proof-length/root-relation check, manifest or release-tuple
 binding, algorithm/log selection, inclusion verification, witness/quorum
 check, durable-state update, release acceptance, or install authorization.
 
-Untrusted inventory/evidence/checkpoint/consistency-proof/inclusion-proof data
+`src/untrusted_transparency_witness_claim.rs` implements only one singular,
+explicitly untrusted alleged witness statement. It reuses the exact checkpoint
+grammar, the dependency-free canonical padded base64 codec, and bounded ASCII
+claims for one `log_id` and `keyid`. Canonicalization orders root fields as
+`checkpoint,keyid,log_id,schema_version,sig`. Empty/unknown key IDs, unknown
+grammar-valid log IDs, arbitrary 1..=4096-byte signatures, and semantically
+impossible checkpoint/signature combinations remain representable. The module
+defines no signed bytes and performs no DSSE composition, algorithm inference,
+signature verification, key/log/witness identity mapping, eligible-set lookup,
+independence/uniqueness check, threshold/quorum/intersection decision,
+checkpoint or release validation, state transition, trust, or authorization.
+
+Untrusted inventory/evidence/checkpoint/consistency-proof/inclusion-proof/witness-claim data
 is a separate layer from any future trusted metadata. This repository has no
 trusted metadata, durable release state, state transition, transparency-log
 proof checking, witness checking, or consumer that could turn a candidate into
