@@ -15,7 +15,9 @@ strings all remain attacker claims. It also parses one closed, bounded
 transparency-checkpoint claim whose tree size and opaque root digest remain
 attacker claims. It also parses bounded self-contained consistency-proof and
 inclusion-proof claims whose checkpoints, leaf/index, and ordered opaque nodes
-remain attacker claims. It has no authority to provision, install,
+remain attacker claims. It also parses one singular witness claim whose alleged
+checkpoint, log/key identifiers, and signature bytes remain attacker claims.
+It has no authority to provision, install,
 authenticate, authorize, create accounts, manage keys, render service units,
 contact systemd, start processes, open sockets, or mutate a host.
 
@@ -50,7 +52,12 @@ one checkpoint, one opaque leaf-digest claim, one canonical-u64 leaf index, and
 zero-size trees with arbitrary indices/proofs, empty/duplicate nodes, and mixed
 algorithms. It does not construct a leaf, bind a manifest or release tuple,
 select a log/algorithm, check orientation, proof length, root relation, or
-inclusion, or grant any release/install authority.
+inclusion, or grant any release/install authority. An
+`UntrustedTransparencyWitnessClaimV1` preserves only one alleged checkpoint,
+log identifier, key identifier, and opaque signature byte string. It defines no
+signed bytes, infers no algorithm, verifies no signature, maps no identity,
+looks up no eligible set, and establishes no independence, uniqueness,
+threshold, quorum, intersection, checkpoint validity, trust, or authority.
 
 ## Parser defenses
 
@@ -80,7 +87,11 @@ algorithm, proof-length, endpoint-ordering, root-relation, or verification
 logic. The inclusion-proof parser has the same byte/node caps and reused
 grammars, accepts only a canonical unsigned JSON `u64` leaf index, and adds no
 range, orientation, leaf-construction, manifest/tuple binding, root-relation,
-or inclusion logic.
+or inclusion logic. The witness-claim parser caps input at 8192 bytes, reuses
+the exact checkpoint grammar, restricts `log_id` to a bounded non-path ASCII
+identifier, bounds printable `keyid`, and accepts only 1..=4096 decoded bytes
+of canonical padded standard base64. It adds no DSSE, signed-message,
+cryptographic, identity, witness-set, quorum, state, or authorization logic.
 JSON Schema is only a structural, non-authoritative consumer aid; it cannot
 enforce raw lexical duplicate/numeric rules or Rust `u64` conversion. The Rust
 byte parser is mandatory for contract validation.

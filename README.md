@@ -12,7 +12,9 @@ Intercom protected-service boundary. Today it provides only:
 - a bounded Rust-only parser and canonicalizer for one explicitly untrusted
   transparency-checkpoint claim;
 - a bounded Rust-only parser and canonicalizer for one explicitly untrusted,
-  self-contained transparency-consistency-proof claim; and
+  self-contained transparency-consistency-proof claim;
+- a bounded Rust-only parser and canonicalizer for one singular explicitly
+  untrusted transparency-witness claim; and
 - a private, data-only npm contract pack containing the two closed JSON
   schemas, type declarations, and hardening data.
 
@@ -122,6 +124,23 @@ release tuple, and establishes no inclusion, consistency, witness authority,
 quorum, high-water state, release acceptance, or installation authority. This
 Rust-only surface is absent from JSON Schemas, TypeScript declarations, and npm
 metadata.
+
+`UntrustedTransparencyWitnessClaimV1::parse(&[u8])` accepts at most 8192
+bytes. Its closed root contains exactly
+`checkpoint,keyid,log_id,schema_version,sig`. The checkpoint reuses the exact
+reviewed grammar; `log_id` is a 1..=128-byte non-path ASCII identifier,
+`keyid` is 0..=128 printable ASCII bytes, and `sig` is canonical padded RFC
+4648 standard base64 decoding to 1..=4096 arbitrary bytes. Compact canonical
+JSON uses the root order above and the existing checkpoint/digest orders.
+
+The parser defines no signed bytes and infers no signature algorithm or length.
+It deliberately accepts empty or unknown key identifiers, unknown grammar-valid
+log identifiers, arbitrary signature bytes, and semantically impossible
+checkpoint/signature combinations. A singular claim establishes no key, log,
+or witness identity; signature validity; eligible-set membership; independence;
+uniqueness; threshold, quorum, or intersection; checkpoint validity; release
+binding; trust; or authority. This Rust-only surface is absent from DSSE
+semantics, JSON Schemas, TypeScript declarations, and npm metadata.
 
 ## Contract pack
 
