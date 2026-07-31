@@ -4,7 +4,9 @@ This repository is the strictly non-privileged foundation for a future Agent
 Intercom protected-service boundary. Today it provides only:
 
 - a Rust library that validates and canonicalizes `provisioning-request.v1`;
-- an inert validator for the exact `systemd-hardening.v1` data contract; and
+- an inert validator for the exact `systemd-hardening.v1` data contract;
+- a bounded, format-only parser and canonicalizer for untrusted DSSE v1
+  envelopes, including exact pre-authentication encoding; and
 - a private, data-only npm contract pack containing the two closed JSON
   schemas, type declarations, and hardening data.
 
@@ -12,6 +14,8 @@ Nothing here installs, provisions, authenticates, authorizes, starts, stops,
 signals, or mutates a service, account, key, socket, provider, or host. There
 is no binary, `main`, build script, service unit, JavaScript runtime, trust
 root, release manifest, signature policy, installer, or integration wiring.
+The DSSE surface adds no trust root, signature verification, cryptographic
+algorithm, semantic payload policy, installer, or integration wiring.
 
 ## Rust API
 
@@ -29,6 +33,22 @@ canonical decimal text: no sign and no leading zero except the single digit
 `validate_systemd_hardening(&[u8])` accepts only the exact inert object in
 [`data/systemd-hardening.v1.json`](data/systemd-hardening.v1.json). It does not
 render or apply configuration.
+
+`UntrustedDsseEnvelopeV1::parse(&[u8])` accepts at most 65536 bytes and only
+the closed DSSE fields `payload`, `payloadType`, and `signatures`, with exactly
+`keyid` and `sig` in each signature entry. Decoded payloads are capped at
+32768 bytes, signature arrays at 32 entries, and each decoded signature at
+1..=4096 bytes. `payloadType` is 1..=256 printable ASCII bytes; `keyid` is
+0..=128 printable ASCII bytes. An empty, required `keyid` follows the DSSE
+unspecified-key convention and remains attacker-chosen metadata.
+
+Payload and signature strings must use canonical padded RFC 4648 standard
+base64. Canonical JSON is compact and fixes the lexicographic order
+`payload,payloadType,signatures` and `keyid,sig` while preserving signature
+array order. `pre_authentication_encoding()` returns exactly
+`DSSEv1 <payloadType-byte-length> <payloadType> <payload-byte-length> <payload>`.
+The parser does not interpret payload semantics, infer an algorithm, verify a
+signature, or authorize any action.
 
 ## Contract pack
 

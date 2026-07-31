@@ -94,6 +94,68 @@ fn repository_has_no_javascript_native_service_or_executable_source() {
 }
 
 #[test]
+fn dsse_surface_is_format_only_without_crypto_policy_roots_or_runtime_wiring() {
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    for forbidden in ["base64 =", "ed25519", "openssl", "ring =", "rsa =", "sha2"] {
+        assert!(
+            !manifest.contains(forbidden),
+            "crypto/encoding dependency entered the format-only crate: {forbidden}"
+        );
+    }
+
+    let dsse = fs::read_to_string(root().join("src/dsse.rs")).unwrap();
+    for forbidden in [
+        "std::fs",
+        "std::net",
+        "std::os",
+        "std::process",
+        "Command::",
+        "TcpStream",
+        "VerifiedReleasePolicy",
+        "ReleasePolicy",
+        "TrustArgument",
+        "TrustResult",
+        "verify_install_input",
+        "Observer",
+        "Integration",
+    ] {
+        assert!(
+            !dsse.contains(forbidden),
+            "DSSE format module crossed its inert boundary: {forbidden}"
+        );
+    }
+
+    for forbidden_path in [
+        "src/release_policy.rs",
+        "src/verified_release_policy.rs",
+        "src/observer.rs",
+        "src/system.rs",
+        "src/integration.rs",
+        "src/runtime.rs",
+        "src/install.rs",
+        "src/data",
+        "src/npm",
+        "data/dsse",
+        "data/keys",
+        "data/trust-roots",
+        "tests/fixtures/dsse",
+        "tests/keys",
+        "tests/trust-roots",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden production/test trust or runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    assert!(!package.to_ascii_lowercase().contains("dsse"));
+    assert!(!declarations.to_ascii_lowercase().contains("dsse"));
+    assert!(!declarations.contains("VerifiedReleasePolicy"));
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [
