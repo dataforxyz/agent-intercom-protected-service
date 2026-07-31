@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dataforxyz:agent-intercom:systemd-hardening:v1",
+  "title": "systemd-hardening.v1",
+  "description": "Structural, non-authoritative schema for inert hardening data. It does not enforce raw JSON lexical rules; the Rust byte parser is mandatory. This schema does not render or install a service unit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "AmbientCapabilities",
+    "CapabilityBoundingSet",
+    "NoNewPrivileges",
+    "PrivateTmp",
+    "ProtectHome",
+    "ProtectSystem",
+    "RestrictAddressFamilies",
+    "RestrictSUIDSGID",
+    "schema_version"
+  ],
+  "properties": {
+    "AmbientCapabilities": {
+      "const": []
+    },
+    "CapabilityBoundingSet": {
+      "const": []
+    },
+    "NoNewPrivileges": {
+      "const": "yes"
+    },
+    "PrivateTmp": {
+      "const": "yes"
+    },
+    "ProtectHome": {
+      "const": "yes"
+    },
+    "ProtectSystem": {
+      "const": "strict"
+    },
+    "RestrictAddressFamilies": {
+      "const": [
+        "AF_UNIX"
+      ]
+    },
+    "RestrictSUIDSGID": {
+      "const": "yes"
+    },
+    "schema_version": {
+      "const": 1
+    }
+  }
+}

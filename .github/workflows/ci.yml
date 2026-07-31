@@ -1,0 +1,61 @@
+name: foundation-ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source without persisted credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Acquire exact ephemeral Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 26.3.0
+
+      - name: Acquire exact ephemeral Rust and npm tools as the runner user
+        shell: bash
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal --component rustfmt,clippy --no-self-update
+          rust_bin=$(rustup which --toolchain 1.97.1 rustc)
+          rust_bin=${rust_bin%/rustc}
+          echo "$rust_bin" >>"$GITHUB_PATH"
+          npm install --global npm@11.16.0 --ignore-scripts
+
+      - name: Verify exact direct tool versions before any package command
+        shell: bash
+        run: |
+          case "$(rustc --version)" in
+            "rustc 1.97.1 "*) ;;
+            *) exit 1 ;;
+          esac
+          case "$(cargo --version)" in
+            "cargo 1.97.1 "*) ;;
+            *) exit 1 ;;
+          esac
+          test "$(node --version)" = v26.3.0
+          test "$(npm --version)" = 11.16.0
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Lint all Rust targets
+        run: cargo clippy --locked --offline --all-targets -- -D warnings
+
+      - name: Run hostile and boundary tests
+        run: cargo test --locked --offline --all-targets
+
+      - name: Audit the locked zero-dependency inventory
+        run: cargo tree --locked --offline --target=all
+
+      - name: Prove exact-tool package determinism in isolated state
+        run: tools/check-reproducible-packages.sh
