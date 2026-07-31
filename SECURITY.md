@@ -13,9 +13,9 @@ also parses one closed, bounded release-inventory candidate whose tuple,
 singular installable descriptor, evidence descriptors, lengths, and digest
 strings all remain attacker claims. It also parses one closed, bounded
 transparency-checkpoint claim whose tree size and opaque root digest remain
-attacker claims. It also parses one bounded self-contained consistency-proof
-claim whose endpoint checkpoints and ordered opaque nodes remain attacker
-claims. It has no authority to provision, install,
+attacker claims. It also parses bounded self-contained consistency-proof and
+inclusion-proof claims whose checkpoints, leaf/index, and ordered opaque nodes
+remain attacker claims. It has no authority to provision, install,
 authenticate, authorize, create accounts, manage keys, render service units,
 contact systemd, start processes, open sockets, or mutate a host.
 
@@ -44,7 +44,13 @@ checkpoint claims and 0..=64 ordered opaque digest claims. It intentionally
 does not reject regressing sizes, unequal equal-size roots, empty or duplicate
 nodes, or mixed algorithms because it performs no ordering, Merkle, proof,
 append-only, monotonicity, witness, quorum, active-log, or durable-state
-semantics.
+semantics. An `UntrustedTransparencyInclusionProofV1` likewise preserves only
+one checkpoint, one opaque leaf-digest claim, one canonical-u64 leaf index, and
+0..=64 ordered opaque nodes. It intentionally accepts out-of-range indices,
+zero-size trees with arbitrary indices/proofs, empty/duplicate nodes, and mixed
+algorithms. It does not construct a leaf, bind a manifest or release tuple,
+select a log/algorithm, check orientation, proof length, root relation, or
+inclusion, or grant any release/install authority.
 
 ## Parser defenses
 
@@ -71,7 +77,10 @@ dispatch or digest-length inference. The consistency-proof parser caps total
 input at 65536 bytes and opaque proof nodes at 64, reuses the exact checkpoint
 and digest grammars, preserves array order and duplicates, and adds no
 algorithm, proof-length, endpoint-ordering, root-relation, or verification
-logic.
+logic. The inclusion-proof parser has the same byte/node caps and reused
+grammars, accepts only a canonical unsigned JSON `u64` leaf index, and adds no
+range, orientation, leaf-construction, manifest/tuple binding, root-relation,
+or inclusion logic.
 JSON Schema is only a structural, non-authoritative consumer aid; it cannot
 enforce raw lexical duplicate/numeric rules or Rust `u64` conversion. The Rust
 byte parser is mandatory for contract validation.

@@ -12,8 +12,10 @@ installable descriptor, and bounded evidence descriptors as fixed-order JSON.
 The transparency-checkpoint parser returns one opaque root-digest claim and one
 canonical-u64 tree-size claim as fixed-order JSON. The consistency-proof parser
 returns exact untrusted from/to checkpoint claims plus 0..=64 ordered opaque
-node claims as fixed-order JSON. Every returned value remains untrusted with
-respect to any future privileged action.
+node claims as fixed-order JSON. The inclusion-proof parser returns one
+untrusted checkpoint, opaque leaf digest, canonical-u64 leaf index, and 0..=64
+ordered opaque nodes as fixed-order JSON. Every returned value remains
+untrusted with respect to any future privileged action.
 
 DSSE format validity is not signature verification. Both an empty `keyid`
 (permitted as an unspecified key under DSSE conventions) and a nonempty
@@ -41,8 +43,17 @@ No Merkle operation, proof sufficiency, consistency, append-only property,
 monotonicity, freshness, active-log identity, witness authority, quorum, or
 state transition follows from parse success.
 
-The current inventory, evidence, checkpoint, and consistency proof are solely untrusted input. Future trusted
-metadata, durable rollback or enrollment state, and authorization/state
+A format-valid inclusion-proof claim establishes no inclusion relation. An
+index may be outside the claimed tree; a zero-size tree may have any index and
+proof; nodes may be empty, duplicated, reordered, or use unrelated algorithm
+labels. No leaf is constructed from a canonical manifest digest or exact
+release tuple, no digest or Merkle algorithm/log is selected, and no index
+range, orientation, proof length, root relation, witness evidence, high-water
+state, release acceptance, or installation authorization is checked.
+
+The current inventory, evidence, checkpoint, consistency proof, and inclusion
+proof are solely untrusted input. Future trusted metadata, durable rollback or
+enrollment state, and authorization/state
 transitions are separate layers and are all absent. This foundation contains
 no trust roots, trusted keys, cryptographic verification, digest validation,
 policy engine, authoritative release manifest or catalog, identity mapping,

@@ -35,6 +35,11 @@ untrusted transparency-consistency-proof bytes (<=65536)
   -> the same bounded strict JSON boundary
   -> exact from/to checkpoint claims + 0..=64 ordered opaque node claims
   -> fixed-order from_checkpoint,proof,schema_version,to_checkpoint JSON
+
+untrusted transparency-inclusion-proof bytes (<=65536)
+  -> the same bounded strict JSON boundary
+  -> exact checkpoint + opaque leaf digest + canonical-u64 index + 0..=64 nodes
+  -> fixed-order checkpoint,leaf_digest,leaf_index,proof,schema_version JSON
 ```
 
 `src/strict_json.rs` is a dependency-free parser for the bounded contract
@@ -112,10 +117,23 @@ performs no Merkle operation, proof-length inference, endpoint ordering or root
 relation, algorithm/log selection, consistency verification, append-only check,
 monotonicity/freshness decision, witness/quorum check, or durable-state update.
 
-Untrusted inventory/evidence/checkpoint/consistency-proof data is a separate
-layer from any future trusted metadata. This repository has no trusted
-metadata, durable release state, state transition, transparency-log proof
-checking, witness checking, or consumer that could turn a candidate into
+`src/untrusted_transparency_inclusion_proof.rs` implements only an explicitly
+untrusted, self-contained inclusion-proof claim. It reuses the exact checkpoint
+and opaque digest grammars, adds one canonical unsigned JSON `u64` leaf index,
+and preserves an ordered 0..=64 proof array including duplicates.
+Canonicalization orders root fields as
+`checkpoint,leaf_digest,leaf_index,proof,schema_version`. It intentionally
+accepts out-of-range indices, zero-size trees with arbitrary indices/proofs,
+empty/duplicate nodes, mixed algorithms, and structurally valid but impossible
+Merkle claims. It performs no leaf construction, digest or Merkle operation,
+index/orientation/proof-length/root-relation check, manifest or release-tuple
+binding, algorithm/log selection, inclusion verification, witness/quorum
+check, durable-state update, release acceptance, or install authorization.
+
+Untrusted inventory/evidence/checkpoint/consistency-proof/inclusion-proof data
+is a separate layer from any future trusted metadata. This repository has no
+trusted metadata, durable release state, state transition, transparency-log
+proof checking, witness checking, or consumer that could turn a candidate into
 authority.
 
 The private npm package is an alternate static distribution of the two

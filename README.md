@@ -104,6 +104,25 @@ equal sizes with unequal roots, empty proofs, duplicate nodes, and mixed opaque
 algorithms remain representable attacker claims. This Rust-only surface is
 absent from JSON Schemas, TypeScript declarations, and npm metadata.
 
+`UntrustedTransparencyInclusionProofV1::parse(&[u8])` accepts at most 65536
+bytes. Its closed root contains exactly
+`checkpoint,leaf_digest,leaf_index,proof,schema_version`. The checkpoint and
+all digest objects reuse the existing opaque claim grammars. `leaf_index` is a
+canonical unsigned JSON `u64`; `proof` preserves 0..=64 ordered opaque digest
+claims including duplicates. Compact canonical JSON uses the fixed root order
+above, checkpoint order `root_digest,schema_version,tree_size`, and digest
+order `algorithm,value`.
+
+The parser deliberately accepts an index outside the claimed tree, a nonempty
+proof for a zero-size tree, empty or duplicate proof nodes, mixed algorithms,
+and any other structurally valid but semantically impossible Merkle claim. It
+selects no log or algorithm, constructs or hashes no leaf, checks no index
+range, orientation, proof sufficiency, or root relation, binds no manifest or
+release tuple, and establishes no inclusion, consistency, witness authority,
+quorum, high-water state, release acceptance, or installation authority. This
+Rust-only surface is absent from JSON Schemas, TypeScript declarations, and npm
+metadata.
+
 ## Contract pack
 
 The root `package.json` describes
