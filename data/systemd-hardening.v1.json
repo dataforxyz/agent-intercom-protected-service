@@ -1,0 +1,14 @@
+{
+  "AmbientCapabilities": [],
+  "CapabilityBoundingSet": [],
+  "NoNewPrivileges": "yes",
+  "PrivateTmp": "yes",
+  "ProtectHome": "yes",
+  "ProtectSystem": "strict",
+  "RestrictAddressFamilies": [
+    "AF_UNIX"
+  ],
+  "RestrictSUIDSGID": "yes",
+  "schema_version": 1
+}
+

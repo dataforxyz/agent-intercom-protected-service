@@ -1,0 +1,17 @@
+{
+  "name": "@dataforxyz/agent-intercom-protected-service-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Data-only contracts for the inert Agent Intercom protected-service foundation",
+  "license": "AGPL-3.0-only",
+  "types": "./index.d.ts",
+  "files": [
+    "index.d.ts",
+    "schemas/provisioning-request.v1.schema.json",
+    "schemas/systemd-hardening.v1.schema.json",
+    "data/systemd-hardening.v1.json",
+    "README.md",
+    "LICENSE"
+  ]
+}
+
