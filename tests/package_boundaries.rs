@@ -156,6 +156,97 @@ fn dsse_surface_is_format_only_without_crypto_policy_roots_or_runtime_wiring() {
 }
 
 #[test]
+fn release_inventory_surface_is_rust_only_untrusted_data_without_runtime_or_policy_wiring() {
+    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    assert!(!manifest.contains("[dependencies]"));
+    assert!(!manifest.contains("[build-dependencies]"));
+
+    let source = fs::read_to_string(root().join("src/untrusted_release_inventory.rs")).unwrap();
+    for required in [
+        "pub struct UntrustedReleaseInventoryV1",
+        "pub struct UntrustedArtifactClaim",
+        "pub struct UntrustedDigestClaim",
+        "pub struct UntrustedEvidenceClaim",
+        "pub enum UntrustedEvidenceTag",
+        "MAX_UNTRUSTED_RELEASE_INVENTORY_BYTES: usize = 32_768",
+        "MAX_UNTRUSTED_EVIDENCE_CLAIMS: usize = 32",
+        "subject_digest != *installable_digest",
+    ] {
+        assert!(source.contains(required), "inventory omitted {required}");
+    }
+    for forbidden in [
+        "use crate::dsse",
+        "use crate::base64",
+        "std::fs",
+        "std::io",
+        "std::net",
+        "std::os",
+        "std::path",
+        "std::process",
+        "std::time",
+        "Command::",
+        "TcpStream",
+        "File::",
+        "SystemTime",
+        "VerifiedRelease",
+        "TrustedRelease",
+        "AcceptedRelease",
+        "AuthorizedRelease",
+        "ReleasePolicy",
+        "verify_install_input",
+        "pre_authentication_encoding",
+        "signature_bytes",
+        "key_id",
+    ] {
+        assert!(
+            !source.contains(forbidden),
+            "inventory crossed its inert untrusted boundary: {forbidden}"
+        );
+    }
+
+    let library = fs::read_to_string(root().join("src/lib.rs")).unwrap();
+    assert!(library.contains("mod untrusted_release_inventory;"));
+    assert!(library.contains("canonicalize_untrusted_release_inventory"));
+
+    for forbidden_path in [
+        "schemas/untrusted-release-inventory.v1.schema.json",
+        "schemas/release-inventory.v1.schema.json",
+        "data/untrusted-release-inventory.v1.json",
+        "data/release-inventory.v1.json",
+        "tests/fixtures/untrusted-release-inventory",
+        "tests/fixtures/release-inventory",
+        "src/release_inventory_policy.rs",
+        "src/release_inventory_runtime.rs",
+        "src/release_inventory_service.rs",
+    ] {
+        assert!(
+            !root().join(forbidden_path).exists(),
+            "forbidden inventory exposure/runtime surface: {forbidden_path}"
+        );
+    }
+
+    let package = fs::read_to_string(root().join("package.json")).unwrap();
+    let declarations = fs::read_to_string(root().join("index.d.ts")).unwrap();
+    for forbidden in [
+        "untrusted-release-inventory",
+        "release-inventory",
+        "UntrustedReleaseInventory",
+        "UntrustedArtifactClaim",
+        "UntrustedDigestClaim",
+        "UntrustedEvidenceClaim",
+    ] {
+        assert!(
+            !package.contains(forbidden),
+            "inventory entered npm package metadata: {forbidden}"
+        );
+        assert!(
+            !declarations.contains(forbidden),
+            "inventory entered TypeScript declarations: {forbidden}"
+        );
+    }
+}
+
+#[test]
 fn local_package_proof_requires_exact_direct_tools_before_packaging() {
     let checker = fs::read_to_string(root().join("tools/check-reproducible-packages.sh")).unwrap();
     for required in [

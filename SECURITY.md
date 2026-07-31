@@ -9,7 +9,9 @@ cannot perform a privileged action. The Rust crate accepts bounded bytes,
 validates closed data contracts, and returns canonical bytes or an inert
 validation marker. Its DSSE support only validates a closed envelope shape,
 canonical base64, bounds, canonical JSON, and pre-authentication encoding. It
-has no authority to provision, install,
+also parses one closed, bounded release-inventory candidate whose tuple,
+singular installable descriptor, evidence descriptors, lengths, and digest
+strings all remain attacker claims. It has no authority to provision, install,
 authenticate, authorize, create accounts, manage keys, render service units,
 contact systemd, start processes, open sockets, or mutate a host.
 
@@ -21,6 +23,13 @@ A format-valid `UntrustedDsseEnvelopeV1` is likewise attacker-chosen data. Its
 `keyid` may be empty under the DSSE unspecified-key convention; empty and
 nonempty key identifiers have exactly the same non-authoritative status. No
 parsed signature bytes are verified, and no payload is interpreted as policy.
+An `UntrustedReleaseInventoryV1` is likewise only structural data. Its
+evidence may be empty. Equality between an evidence `subject_digest` and the
+singular installable `digest` compares only the two decoded algorithm strings
+and two decoded value strings. It performs no digest decoding, computation,
+algorithm selection, artifact-byte comparison, evidence assessment, or install
+selection. Claimed lengths are not measurements. No transparency-log proof or
+witness statement is checked.
 
 ## Parser defenses
 
@@ -34,6 +43,12 @@ whitespace and URL-safe base64 alphabets, malformed or extra padding, nonzero
 pad bits, nonprintable payload types or key identifiers, empty signature
 arrays, and empty or oversized decoded signatures. The envelope, decoded
 payload, and signature count are bounded before they can become trusted state.
+The inventory parser caps total input at 32768 bytes and evidence at 32
+entries; requires exactly one `installable` object; restricts tuple and
+algorithm labels to bounded non-path ASCII identifiers; accepts only canonical
+unsigned JSON `u64` length claims; and bounds digest value claims to printable
+ASCII. Its digest labels and values remain opaque and receive no
+algorithm-specific allowlist, decoding, or length inference.
 JSON Schema is only a structural, non-authoritative consumer aid; it cannot
 enforce raw lexical duplicate/numeric rules or Rust `u64` conversion. The Rust
 byte parser is mandatory for contract validation.
